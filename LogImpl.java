@@ -10,12 +10,23 @@ class LogImplFile {
     private FileInputStream fis;
     private FileOutputStream fos;
 
+    void printException(Exception e) {
+    }
+
     LogImplFile(String fileName) {
         this.fileName = fileName;
         try {
             fis = new FileInputStream(fileName);
             fos = new FileOutputStream(fileName);
         } catch (FileNotFoundException e) {
+            System.out.println(e);
+        } finally {
+            if (fis !== null) {
+                fis.close();
+            }
+            if (fos != null) {
+                fos.close();
+            }
         }
     }    
 
@@ -25,6 +36,7 @@ class LogImplFile {
             ObjectOutputStream oos =  new ObjectOutputStream(fos);  
             oos.writeObject(record);
         } catch (IOException e) {
+            printException(e);
             return false;
         }
         return true;
@@ -37,7 +49,9 @@ class LogImplFile {
             ObjectInputStream ois = new ObjectInputStream(fis);
             record = (LogRecord)ois.readObject();
         } catch (IOException e) {
+            printException(e);
         } catch (ClassNotFoundException e) {
+            printException(e);
         }
 
         return record;

@@ -1,3 +1,4 @@
 # ignore java class files, jars etc
 *.class
 *.jar
+*.java~
