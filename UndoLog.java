@@ -45,5 +45,9 @@ class UndoLog implements Log {
     public void dump() {
         logImpl.dump();
     }
+
+    public void dbdump() {
+        db.dump();
+    }
 }
 

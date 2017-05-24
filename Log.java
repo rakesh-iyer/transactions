@@ -4,5 +4,6 @@ interface Log {
     void abortTransaction(String tid);
     void write(Block s, Data d);
     void dump();
+    void dbdump();
 }
 
