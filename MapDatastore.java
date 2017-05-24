@@ -1,9 +1,9 @@
 import java.util.*;
 
-class MapDatabase implements Database {
+class MapDatastore implements Datastore {
     Map<Block, Data> dbMap;
 
-    public MapDatabase() {
+    public MapDatastore() {
         dbMap = new HashMap<>();
     }
 
