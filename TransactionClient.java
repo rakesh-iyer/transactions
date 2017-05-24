@@ -1,32 +1,30 @@
 class TransactionClient {
     public static void main(String args[]) {
-        System.out.println("With Undo Log");
-        doTransactions(new UndoLog(new FileLogImpl("UndologFile"), new MapDatabase()));
-        System.out.println("With Redo Log");
-        doTransactions(new RedoLog(new FileLogImpl("RedologFile"), new MapDatabase()));
+        doTransactions(new FileDatabase(Database.LogType.UNDO));
+        doTransactions(new FileDatabase(Database.LogType.REDO));
     }
 
-    static void doTransactions(Log log) {
-        String tid = log.startTransaction();
+    static void doTransactions(Database db) {
+        String tid = db.startTransaction();
 
         System.out.println("New Transaction");
-        log.write(new Block(0), new Data("Zero"));
-        log.write(new Block(1), new Data("One"));
+        db.write(new Block(0), new Data("Zero"));
+        db.write(new Block(1), new Data("One"));
 
         System.out.println("Before Transaction commited");
-        log.dbdump();
-        log.commitTransaction(tid);
+        db.dump();
+        db.commitTransaction(tid);
         System.out.println("After Transaction commited");
-        log.dbdump();
+        db.dump();
         System.out.println("New Transaction");
 
-        tid = log.startTransaction();
-        log.write(new Block(1), new Data("Three"));
+        tid = db.startTransaction();
+        db.write(new Block(1), new Data("Three"));
         System.out.println("Before Transaction aborted");
-        log.dbdump();
+        db.dump();
 
-        log.abortTransaction(tid);
+        db.abortTransaction(tid);
         System.out.println("After Transaction aborted");
-        log.dbdump();
+        db.dump();
     }
 }
