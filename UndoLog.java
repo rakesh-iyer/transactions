@@ -14,6 +14,10 @@ class UndoLog implements Log {
         return transactionId;
     }
 
+    public Data read(Block b) {
+        return db.read(b);
+    }
+
     public void write(Block s, Data newData) {
         Data oldData = db.read(s);
 

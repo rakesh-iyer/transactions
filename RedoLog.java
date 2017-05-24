@@ -13,6 +13,24 @@ class RedoLog implements Log {
         return UUID.randomUUID().toString();
     }
 
+    public Data read(Block b) {
+        Data d = null;
+        List<LogRecord> list = logImpl.readAllRecords();
+
+        for (LogRecord r : list) {
+            if (r.getBlock().equals(b)) {
+                d = r.getNewData();
+                break;
+            }
+        }
+
+        if (d == null) {
+            d = db.read(b);
+        }
+
+        return d;
+    }
+
     public void write(Block b, Data d) {
         LogRecord r = new LogRecord();
         r.setBlock(b);
