@@ -1,5 +1,8 @@
+import java.util.*;
+
 interface LogImpl {
     void writeRecord(LogRecord r);
-    LogRecord readRecord();
+    List<LogRecord> readAllRecords();
     void deleteAllRecords();
+    void dump();
 }

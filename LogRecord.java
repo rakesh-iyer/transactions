@@ -1,16 +1,44 @@
-class LogRecord {
-    Sector s;
-    Data d;
+import java.io.*;
+
+class LogRecord implements Serializable {
+    Block s;
+    Data oldData;
+    Data newData;
     Time t;
 
-    Sector getSector() {
+    Block getBlock() {
         return s;
     }
 
-    Data getData() {
-        return data;
+    void setBlock(Block s) {
+        this.s = s;
+    }
+
+    Data getOldData() {
+        return oldData;
+    }
+
+    void setOldData(Data d) {
+        oldData = d;
+    }
+
+    Data getNewData() {
+        return newData;
+    }
+
+    void setNewData(Data d) {
+        newData = d;
     }
 
     Time getTime() {
+        return t;
+    }
+
+    void setTime(Time t) {
+        this.t = t;
+    }
+
+    public String toString() {
+        return getBlock() + ":" +  getOldData() + ":" + getNewData() + ":" + getTime();
     }
 }
