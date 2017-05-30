@@ -1,22 +1,26 @@
 import java.util.*;
 
 class MapDatastore implements Datastore {
-    Map<Block, Data> dbMap;
+    Map<Block, StoredData> dbMap;
 
     public MapDatastore() {
         dbMap = new HashMap<>();
     }
 
-    public Data read(Block s) {
-        return dbMap.get(s);
+    public Data read(Block b) {
+        return dbMap.get(b).getData();
     }
 
-    public void write(Block s, Data d) {
-        dbMap.put(s, d);
+    public void write(Block b, Data d, String lsn) {
+        StoredData sd = new StoredData();
+        sd.setData(d);
+        sd.setLSN(lsn);
+
+        dbMap.put(b, sd);
     }
 
     public void dump() {
-        for (Map.Entry<Block,Data> entry : dbMap.entrySet()) {
+        for (Map.Entry<Block,StoredData> entry : dbMap.entrySet()) {
             System.out.println(entry.getKey() + ":" + entry.getValue());
         }
     } 

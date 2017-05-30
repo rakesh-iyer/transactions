@@ -1,13 +1,13 @@
 import java.io.*;
 
 class Data implements Serializable {
-    String s;
+    String d;
 
     Data(String d) {
-        s = d;
+        d = d;
     }
 
     public String toString() {
-        return s;
+        return d;
     }
 }

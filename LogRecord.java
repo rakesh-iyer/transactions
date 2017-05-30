@@ -1,17 +1,46 @@
 import java.io.*;
+import java.util.*;
 
 class LogRecord implements Serializable {
-    Block s;
+    String lsn;
+    String transactionId;
+    Block block;
     Data oldData;
     Data newData;
-    Time t;
+
+    private LogRecord() {
+    }
+
+    static LogRecord newLogRecord() {
+        LogRecord r = new LogRecord();
+
+        r.setLSN(UUID.randomUUID().toString());
+
+        return r;
+    }
+
+    String getLSN() {
+        return lsn;
+    }
+
+    private void setLSN(String lsn) {
+        this.lsn = lsn;
+    }
+
+    String getTransactionId() {
+        return transactionId;
+    }
+
+    void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
 
     Block getBlock() {
-        return s;
+        return block;
     }
 
     void setBlock(Block s) {
-        this.s = s;
+        this.block = block;
     }
 
     Data getOldData() {
@@ -30,15 +59,7 @@ class LogRecord implements Serializable {
         newData = d;
     }
 
-    Time getTime() {
-        return t;
-    }
-
-    void setTime(Time t) {
-        this.t = t;
-    }
-
     public String toString() {
-        return getBlock() + ":" +  getOldData() + ":" + getNewData() + ":" + getTime();
+        return getBlock() + ":" +  getOldData() + ":" + getNewData() + ":" + getLSN() + ":" + getTransactionId();
     }
 }

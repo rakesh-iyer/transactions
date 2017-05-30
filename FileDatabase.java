@@ -9,6 +9,11 @@ class FileDatabase implements Database {
         this.logType = logType;
     }
 
+    // transaction support.
+    public String startTransaction() {
+        return UUID.randomUUID().toString();
+    }
+
     public Data read(Block b) {
         if (logType == LogType.UNDO) {
             return ds.read(b);
@@ -31,60 +36,29 @@ class FileDatabase implements Database {
         }
     }
 
-    public void write(Block b, Data d) {
+    public void write(Block b, Data d, String tid) {
+        LogRecord r = LogRecord.newLogRecord();
+        r.setTransactionId(tid);
+        r.setBlock(b);
+        r.setNewData(d); 
+
         if (logType == LogType.UNDO) {
             Data oldData = ds.read(b);
-
-            LogRecord r = new LogRecord();
-            r.setBlock(b);
             r.setOldData(oldData);
-            r.setNewData(d); 
-            logImpl.writeRecord(r);
-
-            ds.write(b, d);
-        } else {
-            LogRecord r = new LogRecord();
-            r.setBlock(b);
-            r.setNewData(d);
-
-            logImpl.writeRecord(r);
         }
-    }
 
-    
-    // transaction support.
+        logImpl.writeRecord(r);
 
-    public String startTransaction() {
-        return UUID.randomUUID().toString();
+        if (logType == LogType.UNDO) {
+            ds.write(b, d, r.getLSN());
+        }
     }
 
     public void commitTransaction(String tid) {
-        if (logType == LogType.UNDO) {
-            logImpl.deleteAllRecords();
-        } else {
-            List<LogRecord> list = logImpl.readAllRecords();
-
-            for (LogRecord r : list) {
-                ds.write(r.getBlock(), r.getNewData());
-            }
-            logImpl.deleteAllRecords();
-        }
+        
     }
 
     public void abortTransaction(String tid) {
-        if (logType == LogType.UNDO) {
-            List<LogRecord> recordList = logImpl.readAllRecords();
-            for (int i = recordList.size() - 1; i >= 0; i--) {
-                LogRecord record = recordList.get(i);
-                // skip if there was no old data.
-                if (record.getOldData() != null) {
-                    ds.write(record.getBlock(), record.getOldData());
-                }
-            }
-            logImpl.deleteAllRecords();
-        } else {
-            logImpl.deleteAllRecords();
-        }
     }
 
     // debugging

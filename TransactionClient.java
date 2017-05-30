@@ -8,8 +8,8 @@ class TransactionClient {
         String tid = db.startTransaction();
 
         System.out.println("New Transaction");
-        db.write(new Block(0), new Data("Zero"));
-        db.write(new Block(1), new Data("One"));
+        db.write(new Block(0), new Data("Zero"), tid);
+        db.write(new Block(1), new Data("One"), tid);
 
         System.out.println("Before Transaction commited");
         db.dump();
@@ -19,7 +19,7 @@ class TransactionClient {
         System.out.println("New Transaction");
 
         tid = db.startTransaction();
-        db.write(new Block(1), new Data("Three"));
+        db.write(new Block(1), new Data("Three"), tid);
         System.out.println("Before Transaction aborted");
         db.dump();
 
