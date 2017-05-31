@@ -55,7 +55,6 @@ class FileDatabase implements Database {
     }
 
     public void commitTransaction(String tid) {
-        
     }
 
     public void abortTransaction(String tid) {

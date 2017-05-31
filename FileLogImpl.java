@@ -29,7 +29,7 @@ class FileLogImpl implements LogImpl {
         }
     }
 
-    synchronized public List<LogRecord> readAllRecords() {
+    synchronized public List<LogRecord> readRecordsFilter(String tid) {
         try {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream(logFile));
             List<LogRecord> list = new ArrayList<LogRecord>();
@@ -39,6 +39,9 @@ class FileLogImpl implements LogImpl {
             while (!done) {
                 try {
                     LogRecord r = (LogRecord)ois.readObject();
+                    if (tid != null && !r.getTransactionId().equals(tid)) {
+                        continue;
+                    }
                     list.add(r);
                 } catch (EOFException e) {
                     // done processing the log file.
@@ -58,6 +61,14 @@ class FileLogImpl implements LogImpl {
         }
 
         return null;
+    }
+
+    public List<LogRecord> readTransactionRecords(String tid) {
+        return readRecordsFilter(tid);
+    }
+
+    public List<LogRecord> readAllRecords() {
+        return readRecordsFilter(null);
     }
 
     public void dump() {
