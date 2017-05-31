@@ -4,6 +4,7 @@ class FileDatabase implements Database {
     LogType logType;
     LogImpl logImpl = new FileLogImpl(UUID.randomUUID().toString());
     Datastore ds = new MapDatastore();
+    LockManager<Block> blockLockMgr = new MapLockManager<Block>();
 
     FileDatabase(LogType logType) {
         this.logType = logType;
@@ -15,6 +16,7 @@ class FileDatabase implements Database {
     }
 
     public Data read(Block b) {
+        blockLockMgr.acquireReaderLock(b);
         if (logType == LogType.UNDO) {
             return ds.read(b);
         } else {
@@ -38,6 +40,7 @@ class FileDatabase implements Database {
     }
 
     public void write(Block b, Data d, String tid) {
+        blockLockMgr.acquireWriterLock(b);
         UpdateRecord r = new UpdateRecord(tid);
         r.setBlock(b);
         r.setNewData(d); 
