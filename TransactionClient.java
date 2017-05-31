@@ -1,7 +1,7 @@
 class TransactionClient {
     public static void main(String args[]) {
         doTransactions(new FileDatabase(Database.LogType.UNDO));
-        doTransactions(new FileDatabase(Database.LogType.REDO));
+//        doTransactions(new FileDatabase(Database.LogType.REDO));
     }
 
     static void doTransactions(Database db) {

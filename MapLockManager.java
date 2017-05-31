@@ -14,18 +14,12 @@ class MapLockManager<T> implements LockManager<T> {
     }
 
     public void acquireReaderLock(T t) {
-        if (t == null) {
-            Thread.currentThread().dumpStack();
-        }
         RWLock lock = getRWLock(t);
 
         lock.acquireReaderLock();
     }
 
     public void acquireWriterLock(T t) {
-        if (t == null) {
-            Thread.currentThread().dumpStack();
-        }
         RWLock lock = getRWLock(t);
 
         lock.acquireWriterLock();

@@ -11,7 +11,7 @@ class UpdateRecord extends LogRecord {
         return block;
     }
 
-    void setBlock(Block s) {
+    void setBlock(Block block) {
         this.block = block;
     }
 
@@ -19,16 +19,16 @@ class UpdateRecord extends LogRecord {
         return oldData;
     }
 
-    void setOldData(Data d) {
-        oldData = d;
+    void setOldData(Data oldData) {
+        this.oldData = oldData;
     }
 
     Data getNewData() {
         return newData;
     }
 
-    void setNewData(Data d) {
-        newData = d;
+    void setNewData(Data newData) {
+        this.newData = newData;
     }
 
     public String toString() {

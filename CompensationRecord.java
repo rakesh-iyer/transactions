@@ -10,7 +10,7 @@ class CompensationRecord extends LogRecord {
         return block;
     }
 
-    void setBlock(Block s) {
+    void setBlock(Block block) {
         this.block = block;
     }
 
@@ -18,8 +18,8 @@ class CompensationRecord extends LogRecord {
         return data;
     }
 
-    void setData(Data d) {
-        data = d;
+    void setData(Data data) {
+        this.data = data;
     }
 
     public String toString() {
