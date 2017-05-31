@@ -3,8 +3,9 @@ import java.util.*;
 interface LogImpl {
     void writeRecord(LogRecord r);
     List<LogRecord> readAllRecords();
+    List<LogRecord> readAllRecords(String tid);
     List<UpdateRecord> readUpdateRecords();
-    List<LogRecord> readTransactionRecords(String tid);
+    List<UpdateRecord> readUpdateRecords(String tid);
     void deleteAllRecords();
     void dump();
 }

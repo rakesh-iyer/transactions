@@ -55,9 +55,38 @@ class FileDatabase implements Database {
     }
 
     public void commitTransaction(String tid) {
+        StatusRecord s = new StatusRecord(tid);
+        s.setCommited(true);
+        logImpl.writeRecord(s);
+
+        // now do the log updates
+        if (logType == LogType.REDO) {
+            List<UpdateRecord> list = logImpl.readUpdateRecords(tid);
+
+            for (UpdateRecord r : list) {
+                ds.write(r.getBlock(), r.getNewData(), r.getLSN());
+            }
+        }
     }
 
     public void abortTransaction(String tid) {
+        // add the compensation records.
+        if (logType == LogType.UNDO) {
+            List<UpdateRecord> list = logImpl.readUpdateRecords(tid);
+
+            for (UpdateRecord r : list) {
+                CompensationRecord c = new CompensationRecord(r.getTransactionId());
+                c.setBlock(r.getBlock());
+                c.setData(r.getOldData());
+                logImpl.writeRecord(c);
+
+                ds.write(r.getBlock(), r.getOldData(), c.getLSN());
+            }
+        }
+
+        StatusRecord s = new StatusRecord(tid);
+        s.setCommited(false);
+        logImpl.writeRecord(s);
     }
 
     // debugging

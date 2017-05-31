@@ -1,7 +1,6 @@
 class CompensationRecord extends LogRecord {
     Block block;
-    Data oldData;
-    Data newData;
+    Data data;
 
     CompensationRecord(String transactionId) {
         super(transactionId);
@@ -15,23 +14,15 @@ class CompensationRecord extends LogRecord {
         this.block = block;
     }
 
-    Data getOldData() {
-        return oldData;
+    Data getData() {
+        return data;
     }
 
-    void setOldData(Data d) {
-        oldData = d;
-    }
-
-    Data getNewData() {
-        return newData;
-    }
-
-    void setNewData(Data d) {
-        newData = d;
+    void setData(Data d) {
+        data = d;
     }
 
     public String toString() {
-        return getBlock() + ":" +  getOldData() + ":" + getNewData() + ":" + super.toString();
+        return getBlock() + ":" +  getData() + ":" + super.toString();
     }
 }

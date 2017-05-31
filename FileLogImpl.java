@@ -68,7 +68,11 @@ class FileLogImpl implements LogImpl {
         return null;
     }
 
-    public List<LogRecord> readTransactionRecords(String tid) {
+    public List<LogRecord> readAllRecords() {
+        return readRecordsFilter(null, false);
+    }
+
+    public List<LogRecord> readAllRecords(String tid) {
         return readRecordsFilter(tid, false);
     }
 
@@ -82,8 +86,14 @@ class FileLogImpl implements LogImpl {
         return list;
     }
 
-    public List<LogRecord> readAllRecords() {
-        return readRecordsFilter(null, false);
+    public List<UpdateRecord> readUpdateRecords(String tid) {
+        List<UpdateRecord> list = new ArrayList<>();
+        for (LogRecord r : readRecordsFilter(tid, true)) {
+            list.add((UpdateRecord)r);
+        }
+
+        // no way to get base function to return a wildcard type.
+        return list;
     }
 
     public void dump() {

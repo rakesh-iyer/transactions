@@ -9,6 +9,10 @@ class StatusRecord extends LogRecord {
         return commit;
     }
 
+    void setCommited(boolean commit) {
+        this.commit = commit;
+    }
+
     public String toString() {
         return String.valueOf(commit) + ":" + super.toString();
     }
