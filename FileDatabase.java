@@ -4,7 +4,8 @@ class FileDatabase implements Database {
     LogType logType;
     LogImpl logImpl = new FileLogImpl(UUID.randomUUID().toString());
     Datastore ds = new MapDatastore();
-    LockManager<Block> blockLockMgr = new MapLockManager<Block>();
+    LockManager<Block> blockLockMgr = new MapLockManager<>();
+    Map<String, List<Block>> transactionReadLocksMap = new HashMap<>();
 
     FileDatabase(LogType logType) {
         this.logType = logType;
@@ -12,11 +13,16 @@ class FileDatabase implements Database {
 
     // transaction support.
     public String startTransaction() {
-        return UUID.randomUUID().toString();
+        String tid = UUID.randomUUID().toString();
+        transactionReadLocksMap.put(tid, new ArrayList<Block>());
+
+        return tid;
     }
 
-    public Data read(Block b) {
+    public Data read(Block b, String tid) {
         blockLockMgr.acquireReaderLock(b);
+        transactionReadLocksMap.get(tid).add(b);
+
         if (logType == LogType.UNDO) {
             return ds.read(b);
         } else {
@@ -57,27 +63,40 @@ class FileDatabase implements Database {
         }
     }
 
+    private void releaseReaderLocks(String tid) {
+        for (Block b : transactionReadLocksMap.get(tid)) {
+            blockLockMgr.releaseReaderLock(b);
+        }
+    }
+
     public void commitTransaction(String tid) {
         StatusRecord s = new StatusRecord(tid);
         s.setCommited(true);
         logImpl.writeRecord(s);
 
-        // now do the log updates
-        if (logType == LogType.REDO) {
-            List<UpdateRecord> list = logImpl.readUpdateRecords(tid);
+        // you could release the reader locks here.
+        releaseReaderLocks(tid);
 
-            for (UpdateRecord r : list) {
+        // now do the log updates
+        List<UpdateRecord> list = logImpl.readUpdateRecords(tid);
+
+        for (UpdateRecord r : list) {
+            if (logType == LogType.REDO) {
                 ds.write(r.getBlock(), r.getNewData(), r.getLSN());
             }
+            blockLockMgr.releaseWriterLock(r.getBlock());
         }
     }
 
     public void abortTransaction(String tid) {
-        // add the compensation records.
-        if (logType == LogType.UNDO) {
-            List<UpdateRecord> list = logImpl.readUpdateRecords(tid);
+        // you could release the reader locks here.
+        releaseReaderLocks(tid);
 
-            for (UpdateRecord r : list) {
+        // add the compensation records.
+        List<UpdateRecord> list = logImpl.readUpdateRecords(tid);
+
+        for (UpdateRecord r : list) {
+            if (logType == LogType.UNDO) {
                 CompensationRecord c = new CompensationRecord(r.getTransactionId());
                 c.setBlock(r.getBlock());
                 c.setData(r.getOldData());
@@ -85,6 +104,7 @@ class FileDatabase implements Database {
 
                 ds.write(r.getBlock(), r.getOldData(), c.getLSN());
             }
+            blockLockMgr.releaseWriterLock(r.getBlock());
         }
 
         StatusRecord s = new StatusRecord(tid);

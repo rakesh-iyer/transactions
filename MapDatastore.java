@@ -8,7 +8,13 @@ class MapDatastore implements Datastore {
     }
 
     public Data read(Block b) {
-        return dbMap.get(b).getData();
+        StoredData sd = dbMap.get(b);
+        if (sd == null) {
+            sd = new StoredData();
+            dbMap.put(b, sd);
+        }
+
+        return sd.getData();
     }
 
     public void write(Block b, Data d, String lsn) {
