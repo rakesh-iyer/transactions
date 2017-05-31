@@ -18,10 +18,11 @@ class FileDatabase implements Database {
         if (logType == LogType.UNDO) {
             return ds.read(b);
         } else {
+            // no compensation records needed right?
             Data d = null;
-            List<LogRecord> list = logImpl.readAllRecords();
+            List<UpdateRecord> list = logImpl.readUpdateRecords();
 
-            for (LogRecord r : list) {
+            for (UpdateRecord r : list) {
                 if (r.getBlock().equals(b)) {
                     d = r.getNewData();
                     break;
@@ -37,8 +38,7 @@ class FileDatabase implements Database {
     }
 
     public void write(Block b, Data d, String tid) {
-        LogRecord r = LogRecord.newLogRecord();
-        r.setTransactionId(tid);
+        UpdateRecord r = new UpdateRecord(tid);
         r.setBlock(b);
         r.setNewData(d); 
 

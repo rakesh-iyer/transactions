@@ -29,7 +29,7 @@ class FileLogImpl implements LogImpl {
         }
     }
 
-    synchronized public List<LogRecord> readRecordsFilter(String tid) {
+    synchronized public List<LogRecord> readRecordsFilter(String tid, boolean onlyUpdates) {
         try {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream(logFile));
             List<LogRecord> list = new ArrayList<LogRecord>();
@@ -42,6 +42,11 @@ class FileLogImpl implements LogImpl {
                     if (tid != null && !r.getTransactionId().equals(tid)) {
                         continue;
                     }
+
+                    if (onlyUpdates && r instanceof UpdateRecord == false) {
+                        continue;
+                    }
+
                     list.add(r);
                 } catch (EOFException e) {
                     // done processing the log file.
@@ -64,11 +69,21 @@ class FileLogImpl implements LogImpl {
     }
 
     public List<LogRecord> readTransactionRecords(String tid) {
-        return readRecordsFilter(tid);
+        return readRecordsFilter(tid, false);
+    }
+
+    public List<UpdateRecord> readUpdateRecords() {
+        List<UpdateRecord> list = new ArrayList<>();
+        for (LogRecord r : readRecordsFilter(null, true)) {
+            list.add((UpdateRecord)r);
+        }
+
+        // no way to get base function to return a wildcard type.
+        return list;
     }
 
     public List<LogRecord> readAllRecords() {
-        return readRecordsFilter(null);
+        return readRecordsFilter(null, false);
     }
 
     public void dump() {
