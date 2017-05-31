@@ -35,9 +35,8 @@ class RWLock {
         readerLock.acquire();
         if (readers == 0) {
             exclusiveLock.acquire();
-        } else {
-            readers++;
         }
+        readers++;
 
         readerLock.release();
     }

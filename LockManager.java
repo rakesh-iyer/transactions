@@ -3,4 +3,5 @@ interface LockManager<T> {
     void acquireWriterLock(T t);
     void releaseReaderLock(T t);
     void releaseWriterLock(T t);
+    void dump();
 }

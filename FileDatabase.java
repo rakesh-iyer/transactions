@@ -116,6 +116,7 @@ class FileDatabase implements Database {
 
     public void dump() {
         System.out.println("dump starting");
+        blockLockMgr.dump();
         logImpl.dump();
         ds.dump();
         System.out.println("dump ending");

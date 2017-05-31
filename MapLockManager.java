@@ -14,12 +14,18 @@ class MapLockManager<T> implements LockManager<T> {
     }
 
     public void acquireReaderLock(T t) {
+        if (t == null) {
+            Thread.currentThread().dumpStack();
+        }
         RWLock lock = getRWLock(t);
 
         lock.acquireReaderLock();
     }
 
     public void acquireWriterLock(T t) {
+        if (t == null) {
+            Thread.currentThread().dumpStack();
+        }
         RWLock lock = getRWLock(t);
 
         lock.acquireWriterLock();
@@ -36,4 +42,13 @@ class MapLockManager<T> implements LockManager<T> {
 
         lock.releaseWriterLock();
     }
+
+    public void dump() {
+        System.out.println("Lock Manager dump begins");
+        for (T t : lockMap.keySet()) {
+            System.out.println(t);
+        }
+        System.out.println("Lock Manager dump ends");
+    }
 }
+
