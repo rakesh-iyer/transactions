@@ -96,11 +96,25 @@ class FileLogImpl implements LogImpl {
         return list;
     }
 
+    String getString(LogRecord r) {
+        if (r instanceof UpdateRecord) {
+            return "UpdateRecord";
+        } else if (r instanceof CompensationRecord) {
+            return "CompensationRecord";
+        } else if (r instanceof StatusRecord) {
+            return "StatusRecord";
+        } else {
+            return "LogRecord";
+        }
+    }
+
     public void dump() {
+        System.out.println("FileLogImpl dump begins");
         List<LogRecord> list = readAllRecords();
 
         for (LogRecord r : list) {
-            System.out.println(r);
+            System.out.println(getString(r) + ":" + r);
         }
+        System.out.println("FileLogImpl dump ends");
     }
 }

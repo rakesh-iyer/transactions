@@ -26,9 +26,11 @@ class MapDatastore implements Datastore {
     }
 
     public void dump() {
+        System.out.println("MapDatastore dump begins");
         for (Map.Entry<Block,StoredData> entry : dbMap.entrySet()) {
             System.out.println(entry.getKey() + ":" + entry.getValue());
         }
+        System.out.println("MapDatastore dump ends");
     } 
 }
 
