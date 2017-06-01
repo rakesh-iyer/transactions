@@ -1,30 +1,42 @@
+import java.util.*;
+
 class TransactionClient {
+    final static int maxBlock = 8;
+    static Database db = createDatabase(Database.LogType.UNDO);
+
     public static void main(String args[]) {
-//        doTransactions(new FileDatabase(Database.LogType.UNDO));
-        doTransactions(new FileDatabase(Database.LogType.REDO));
+        new Thread(new TransactionThread()).start(); 
+        new Thread(new TransactionThread()).start(); 
+        new Thread(new TransactionThread()).start(); 
+        db.dump();
     }
 
-    static void doTransactions(Database db) {
-        String tid = db.startTransaction();
+    static Database createDatabase(Database.LogType logType) {
+        return new FileDatabase(logType);
+    }
 
-        System.out.println("New Transaction");
-        db.write(new Block(0), new Data("Zero"), tid);
-        db.write(new Block(1), new Data("One"), tid);
+    static void doTransactions() {
+        /* Algorithm
+            Get 3 random block numbers, read and update them with some data.
+            Randomly abort a transaction.
+        */
+        Random r = new Random();
+        String tid1 = db.startTransaction();
+        String threadString = Thread.currentThread().toString();
 
-        System.out.println("Before Transaction commited");
-        db.dump();
-        db.commitTransaction(tid);
-        System.out.println("After Transaction commited");
-        db.dump();
-        System.out.println("New Transaction");
+        db.write(new Block(r.nextInt(maxBlock)), new Data(threadString), tid1, true);
+        db.write(new Block(r.nextInt(maxBlock)), new Data(threadString), tid1, true);
+        db.write(new Block(r.nextInt(maxBlock)), new Data(threadString), tid1, true);
+        db.commitTransaction(tid1);
 
-        tid = db.startTransaction();
-        db.write(new Block(1), new Data("Three"), tid);
-        System.out.println("Before Transaction aborted");
-        db.dump();
+        String tid2 = db.startTransaction();
+        db.write(new Block(r.nextInt(maxBlock)), new Data(threadString), tid2, true);
+        db.abortTransaction(tid2);
+    }
 
-        db.abortTransaction(tid);
-        System.out.println("After Transaction aborted");
-        db.dump();
+    static class TransactionThread implements Runnable {
+        public void run() {
+            doTransactions();
+        }
     }
 }

@@ -45,14 +45,19 @@ class FileDatabase implements Database {
         }
     }
 
-    public void write(Block b, Data d, String tid) {
+    public void write(Block b, Data d, String tid, boolean append) {
         blockLockMgr.acquireWriterLock(b);
+        Data oldData = ds.read(b);
+
         UpdateRecord r = new UpdateRecord(tid);
         r.setBlock(b);
-        r.setNewData(d); 
+        if (append) {
+            r.setNewData(Data.append(oldData, d));
+        } else {
+            r.setNewData(d);
+        }
 
         if (logType == LogType.UNDO) {
-            Data oldData = ds.read(b);
             r.setOldData(oldData);
         }
 

@@ -11,6 +11,8 @@ class MapDatastore implements Datastore {
         StoredData sd = dbMap.get(b);
         if (sd == null) {
             sd = new StoredData();
+            sd.setData(new Data("initial"));
+            sd.setLSN(0);
             dbMap.put(b, sd);
         }
 
