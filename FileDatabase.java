@@ -1,11 +1,12 @@
 import java.util.*;
+import java.util.concurrent.*;
 
 class FileDatabase implements Database {
     LogType logType;
     LogImpl logImpl = new FileLogImpl(UUID.randomUUID().toString());
     Datastore ds = new MapDatastore();
     LockManager<Block> blockLockMgr = new MapLockManager<>();
-    Map<String, List<Block>> transactionReadLocksMap = new HashMap<>();
+    ConcurrentMap<String, List<Block>> transactionReadLocksMap = new ConcurrentHashMap<>();
 
     FileDatabase(LogType logType) {
         this.logType = logType;
@@ -52,10 +53,9 @@ class FileDatabase implements Database {
         UpdateRecord r = new UpdateRecord(tid);
         r.setBlock(b);
         if (append) {
-            r.setNewData(Data.append(oldData, d));
-        } else {
-            r.setNewData(d);
+            d = Data.append(oldData, d);
         }
+        r.setNewData(d);
 
         if (logType == LogType.UNDO) {
             r.setOldData(oldData);
@@ -121,6 +121,11 @@ class FileDatabase implements Database {
 
     public void dump() {
         System.out.println("dump starting");
+        System.out.println("Transaction Read Locks start");
+        for (String tid : transactionReadLocksMap.keySet()) {
+            System.out.println(tid + transactionReadLocksMap.get(tid));
+        }        
+        System.out.println("Transaction Read Locks end");
         blockLockMgr.dump();
         logImpl.dump();
         ds.dump();

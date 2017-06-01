@@ -1,10 +1,11 @@
 import java.util.*;
+import java.util.concurrent.*;
 
 class MapDatastore implements Datastore {
-    Map<Block, StoredData> dbMap;
+    ConcurrentMap<Block, StoredData> dbMap;
 
     public MapDatastore() {
-        dbMap = new HashMap<>();
+        dbMap = new ConcurrentHashMap<>();
     }
 
     public Data read(Block b) {

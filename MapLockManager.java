@@ -1,9 +1,9 @@
-import java.util.*;
+import java.util.concurrent.*;
 
 class MapLockManager<T> implements LockManager<T> {
-    Map <T, RWLock> lockMap = new HashMap<>();
+    ConcurrentMap <T, RWLock> lockMap = new ConcurrentHashMap<>();
 
-    private RWLock getRWLock(T t) {
+    synchronized private RWLock getRWLock(T t) {
         RWLock lock = lockMap.get(t);
         if (lock == null) {
             lock = new RWLock();
@@ -40,7 +40,7 @@ class MapLockManager<T> implements LockManager<T> {
     public void dump() {
         System.out.println("Lock Manager dump begins");
         for (T t : lockMap.keySet()) {
-            System.out.println(t);
+            System.out.println(t + ":" + lockMap.get(t));
         }
         System.out.println("Lock Manager dump ends");
     }

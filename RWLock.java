@@ -21,6 +21,10 @@ class RWLock {
             lock = false;
             notify();
         }
+
+        public String toString() {
+            return String.valueOf(lock);
+        }
     }
 
     void acquireWriterLock() {
@@ -45,6 +49,10 @@ class RWLock {
         readerLock.acquire();
         readers--;
         readerLock.release();
+    }
+
+    public String toString() {
+        return readerLock.toString() + ":" + exclusiveLock.toString();
     }
 }
 
