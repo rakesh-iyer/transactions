@@ -2,15 +2,19 @@ import java.io.*;
 import java.util.*;
 
 class LogRecord implements Serializable {
-    String lsn;
+    Integer lsn;
     String transactionId;
+    static int logRecordCount = 0;
 
     LogRecord(String transactionId) {
-        lsn = UUID.randomUUID().toString();
+        synchronized(this) {
+            lsn = logRecordCount++;
+        }
+
         this.transactionId = transactionId;
     }
 
-    String getLSN() {
+    Integer getLSN() {
         return lsn;
     }
 

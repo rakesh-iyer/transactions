@@ -17,7 +17,7 @@ class MapDatastore implements Datastore {
         return sd.getData();
     }
 
-    public void write(Block b, Data d, String lsn) {
+    public void write(Block b, Data d, Integer lsn) {
         StoredData sd = new StoredData();
         sd.setData(d);
         sd.setLSN(lsn);

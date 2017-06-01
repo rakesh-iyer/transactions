@@ -1,6 +1,6 @@
 class StoredData {
     Data data;
-    String lsn;
+    Integer lsn;
 
     Data getData() {
         return data;
@@ -10,11 +10,11 @@ class StoredData {
         this.data = data;
     }
 
-    String getLSN() {
+    Integer getLSN() {
         return lsn;
     }
 
-    void setLSN(String lsn) {
+    void setLSN(Integer lsn) {
         this.lsn = lsn;
     }
 
