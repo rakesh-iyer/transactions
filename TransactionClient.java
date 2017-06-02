@@ -3,19 +3,43 @@ import java.util.*;
 class TransactionClient {
     final static int maxBlock = 8;
     static Database db = createDatabase(Database.LogType.UNDO);
+    static Thread[] threads = createThreads(5);
+
+    static Thread[] createThreads(int threads) {
+        Thread[] array = new Thread[threads];
+        for (int i = 0; i < array.length; i++) {
+            array[i] = new Thread(new TransactionThread());
+        }
+
+        return array;
+    }
+
+    static void startThreads(Thread[] threads) {
+        for (Thread t : threads) {
+            t.start();
+        }
+    }
+
+    static void joinThreads(Thread[] threads) throws InterruptedException {
+        for (Thread t : threads) {
+            t.join();
+        }
+    }
+
+    static void destroyThreads(Thread[] threads) throws InterruptedException {
+        for (Thread t : threads) {
+            t.suspend();
+        }
+    }
 
     public static void main(String args[]) throws Throwable {
-        Thread t1 = new Thread(new TransactionThread());
-        Thread t2 = new Thread(new TransactionThread());
-        Thread t3 = new Thread(new TransactionThread());
+        Thread mainThread = new Thread(new MainThread());
 
-        t1.start();
-        t2.start();
-        t3.start();
+        mainThread.start();
+        startThreads(threads);
+        joinThreads(threads);
+        mainThread.join();
 
-        t1.join();
-        t2.join();
-        t3.join();
         db.dump();
     }
 
@@ -60,6 +84,20 @@ class TransactionClient {
     static class TransactionThread implements Runnable {
         public void run() {
             doTransactions();
+        }
+    }
+
+    static class MainThread implements Runnable {
+        public void run() {
+            // wait a while.
+            System.out.println("MainThread running");
+            try {
+//                Thread.sleep(0,1);
+                // destroy all threads.
+                destroyThreads(threads);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
