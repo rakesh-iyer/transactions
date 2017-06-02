@@ -10,4 +10,5 @@ interface Database {
     void commitTransaction(String tid);
     void abortTransaction(String tid);
     void dump();
+    void recover();
 }
