@@ -156,25 +156,25 @@ class FileDatabase implements Database {
     // The recovery should be idempotent.
     public void recover() {
         List<LogRecord> list = logImpl.readAllRecords();
-        Map<String, Integer> tids = new HashMap<>();
+        Map<String, Boolean> tidStatus = new HashMap<>();
 
         for (LogRecord r : list) {
             String tid = r.getTransactionId();
 
-            if (tids.get(tid) == null) {
-               tids.put(tid, 0);
+            if (tidStatus.get(tid) == null) {
+               tidStatus.put(tid, false);
             }
 
             if (r instanceof StatusRecord) {
-               tids.put(tid, 1);
+               tidStatus.put(tid, true);
             }
         }
 
         List<String> completedTransactions = new ArrayList<>();
         List<String> incompleteTransactions = new ArrayList<>();
 
-        for (String tid : tids.keySet()) {
-            if (tids.get(tid) == 1) {
+        for (String tid : tidStatus.keySet()) {
+            if (tidStatus.get(tid)) {
                 completedTransactions.add(tid);
             } else {
                 incompleteTransactions.add(tid);
