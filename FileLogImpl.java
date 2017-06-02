@@ -4,6 +4,7 @@ import java.util.*;
 class FileLogImpl implements LogImpl {
     File logFile;
     ObjectOutputStream oos;
+    Integer lastLSN = 0;
 
     public FileLogImpl(String fileName) {
         logFile = new File(fileName);
@@ -21,7 +22,11 @@ class FileLogImpl implements LogImpl {
 
     synchronized public void writeRecord(LogRecord r) {
         try {
-            oos.writeObject(r);
+            // generate lsn on write. this write has to be serialized to ensure a sequential log.
+            synchronized(this) {
+                r.setLSN(lastLSN++);
+                oos.writeObject(r);
+            }
             oos.flush();
         } catch (IOException e) {
             System.out.println("Unexpected io exception");

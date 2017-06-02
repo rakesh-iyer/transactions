@@ -7,15 +7,15 @@ class LogRecord implements Serializable {
     static int logRecordCount = 0;
 
     LogRecord(String transactionId) {
-        synchronized(this) {
-            lsn = logRecordCount++;
-        }
-
         this.transactionId = transactionId;
     }
 
     Integer getLSN() {
         return lsn;
+    }
+
+    void setLSN(Integer lsn) {
+        this.lsn = lsn;
     }
 
     String getTransactionId() {
