@@ -1,45 +1,44 @@
 import java.util.*;
+import java.util.concurrent.*;
 
 class TransactionClient {
     final static int maxBlock = 8;
     static Database db = createDatabase(Database.LogType.UNDO);
-    static Thread[] threads = createThreads(5);
+    static ExecutorService executorService = new ForkJoinPool();
 
-    static Thread[] createThreads(int threads) {
-        Thread[] array = new Thread[threads];
-        for (int i = 0; i < array.length; i++) {
-            array[i] = new Thread(new TransactionThread());
-        }
-
-        return array;
-    }
-
-    static void startThreads(Thread[] threads) {
-        for (Thread t : threads) {
-            t.start();
+    static int createTransactionThreads(int num) {
+        int i = 0;
+        try {
+            for (; i < num; i++) {
+                executorService.execute(new TransactionThread());
+            }
+        } catch (RejectedExecutionException e) {
+            e.printStackTrace();
+        } finally {
+            return i;
         }
     }
 
-    static void joinThreads(Thread[] threads) throws InterruptedException {
-        for (Thread t : threads) {
-            t.join();
+    static void joinTransactionThreads() {
+        try {
+            executorService.awaitTermination(1, TimeUnit.HOURS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
-    static void destroyThreads(Thread[] threads) throws InterruptedException {
-        for (Thread t : threads) {
-            t.suspend();
-        }
+    static void shutdownTransactionThreads() {
+        executorService.shutdownNow();
     }
 
     public static void main(String args[]) throws Throwable {
         Thread mainThread = new Thread(new MainThread());
 
+        createTransactionThreads(5);
         mainThread.start();
-        startThreads(threads);
-        joinThreads(threads);
         mainThread.join();
-
+//        joinTransactionThreads();
+        Thread.sleep(1000);
         db.dump();
     }
 
@@ -92,12 +91,12 @@ class TransactionClient {
             // wait a while.
             System.out.println("MainThread running");
             try {
-//                Thread.sleep(0,1);
-                // destroy all threads.
-                destroyThreads(threads);
-            } catch (InterruptedException e) {
+                Thread.sleep(0,1);
+            } catch (Exception e) {
                 e.printStackTrace();
             }
+            // destroy all threads.
+//            shutdownTransactionThreads();
         }
     }
 }
