@@ -5,6 +5,11 @@ class TransactionClient {
     final static int maxBlock = 8;
     static Database db = createDatabase(Database.LogType.UNDO);
     static ExecutorService executorService = new ForkJoinPool();
+    static int threadInstanceNum;
+
+    synchronized static int getThreadInstanceNum() {
+        return threadInstanceNum++;
+    }
 
     static int createTransactionThreads(int num) {
         int i = 0;
@@ -19,16 +24,9 @@ class TransactionClient {
         }
     }
 
-    static void joinTransactionThreads() {
-        try {
-            executorService.awaitTermination(1, TimeUnit.HOURS);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    static void shutdownTransactionThreads() {
+    static void shutdownTransactionThreads() throws InterruptedException {
         executorService.shutdownNow();
+        executorService.awaitTermination(1, TimeUnit.MINUTES);
     }
 
     public static void main(String args[]) throws Throwable {
@@ -37,8 +35,9 @@ class TransactionClient {
         createTransactionThreads(5);
         mainThread.start();
         mainThread.join();
-//        joinTransactionThreads();
-        Thread.sleep(1000);
+        db.dump();
+        System.out.println("\n\nRecovering database\n\n");
+        db.recover();
         db.dump();
     }
 
@@ -60,29 +59,38 @@ class TransactionClient {
     }
 
 
-    static void doTransactions() {
+    static void doTransactions(int instanceNum) throws InterruptedException {
         /* Algorithm
             Get 3 random block numbers, read and update them with some data.
             Randomly abort a transaction.
         */
-        String tid1 = db.startTransaction();
-        String threadString = Thread.currentThread().toString();
-        Integer[] list = getNonDuplicateRandoms(3);
-        Arrays.sort(list);
+        while (true)  {
+            String tid1 = db.startTransaction();
+            String threadString = "Thread" + instanceNum + "_" + System.nanoTime();
+            Integer[] list = getNonDuplicateRandoms(3);
+            Arrays.sort(list);
 
-        db.write(new Block(list[0]), new Data(threadString), tid1, true);
-        db.write(new Block(list[1]), new Data(threadString), tid1, true);
-        db.write(new Block(list[2]), new Data(threadString), tid1, true);
-        db.commitTransaction(tid1);
+            db.write(new Block(list[0]), new Data(threadString), tid1, true);
+            db.write(new Block(list[1]), new Data(threadString), tid1, true);
+            db.write(new Block(list[2]), new Data(threadString), tid1, true);
+            db.commitTransaction(tid1);
 
-        String tid2 = db.startTransaction();
-        db.write(new Block(list[2]), new Data(threadString), tid2, true);
-        db.abortTransaction(tid2);
+            String tid2 = db.startTransaction();
+            db.write(new Block(list[2]), new Data(threadString), tid2, true);
+            db.abortTransaction(tid2);
+        }
     }
 
     static class TransactionThread implements Runnable {
+        int instanceNum;
         public void run() {
-            doTransactions();
+            try {
+                instanceNum = getThreadInstanceNum();
+                doTransactions(instanceNum);
+            
+            } catch(InterruptedException e) {
+                System.out.println("Thread " + instanceNum + " done");
+            }
         }
     }
 
@@ -91,12 +99,12 @@ class TransactionClient {
             // wait a while.
             System.out.println("MainThread running");
             try {
-                Thread.sleep(0,1);
+                Thread.sleep(50);
+                // destroy all threads.
+                shutdownTransactionThreads();
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            // destroy all threads.
-//            shutdownTransactionThreads();
         }
     }
 }

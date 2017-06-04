@@ -146,6 +146,7 @@ class FileDatabase implements Database {
     private void undoRecovery(List<String> tids) {
         // anything that was not commited or aborted needs to have comp records and a abort record.
         for (String tid: tids) {
+            System.out.println("Aborting tid " + tid);
             abortTransaction(tid, true);
         }
     }
@@ -156,6 +157,7 @@ class FileDatabase implements Database {
     // The recovery should be idempotent.
     public void recover() {
         List<LogRecord> list = logImpl.readAllRecords();
+        dump();
         Map<String, Boolean> tidStatus = new HashMap<>();
 
         for (LogRecord r : list) {
