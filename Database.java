@@ -5,10 +5,10 @@ interface Database {
     }
 
     String startTransaction();
-    Data read(Block b, String tid);
-    void write(Block b, Data d, String tid, boolean append);
-    void commitTransaction(String tid);
-    void abortTransaction(String tid);
+    Data read(Block b, String tid) throws InterruptedException ;
+    void write(Block b, Data d, String tid, boolean append) throws InterruptedException;
+    void commitTransaction(String tid) throws InterruptedException;
+    void abortTransaction(String tid) throws InterruptedException;;
+    void recover() throws InterruptedException;;
     void dump();
-    void recover();
 }

@@ -6,13 +6,9 @@ class RWLock {
     class Mutex {
         boolean lock;
 
-        synchronized void acquire() {
+        synchronized void acquire() throws InterruptedException {
             while (lock) {
-                try {
-                    wait();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                wait();
             }
             lock = true;
         }
@@ -27,7 +23,7 @@ class RWLock {
         }
     }
 
-    void acquireWriterLock() {
+    void acquireWriterLock() throws InterruptedException {
         exclusiveLock.acquire();
     }
 
@@ -35,7 +31,7 @@ class RWLock {
         exclusiveLock.release();
     }
 
-    void acquireReaderLock() {
+    void acquireReaderLock() throws InterruptedException {
         readerLock.acquire();
         if (readers == 0) {
             exclusiveLock.acquire();
@@ -45,7 +41,7 @@ class RWLock {
         readerLock.release();
     }
 
-    void releaseReaderLock() {
+    void releaseReaderLock() throws InterruptedException {
         readerLock.acquire();
         readers--;
         readerLock.release();

@@ -20,7 +20,7 @@ class FileDatabase implements Database {
         return tid;
     }
 
-    public Data read(Block b, String tid) {
+    public Data read(Block b, String tid) throws InterruptedException {
         blockLockMgr.acquireReaderLock(b);
         transactionReadLocksMap.get(tid).add(b);
 
@@ -46,7 +46,7 @@ class FileDatabase implements Database {
         }
     }
 
-    public void write(Block b, Data d, String tid, boolean append) {
+    public void write(Block b, Data d, String tid, boolean append) throws InterruptedException {
         blockLockMgr.acquireWriterLock(b);
         Data oldData = ds.read(b);
 
@@ -68,13 +68,13 @@ class FileDatabase implements Database {
         }
     }
 
-    private void releaseReaderLocks(String tid) {
+    private void releaseReaderLocks(String tid) throws InterruptedException {
         for (Block b : transactionReadLocksMap.get(tid)) {
             blockLockMgr.releaseReaderLock(b);
         }
     }
 
-    public void commitTransaction(String tid) {
+    public void commitTransaction(String tid) throws InterruptedException {
         StatusRecord s = new StatusRecord(tid);
         s.setCommited(true);
         logImpl.writeRecord(s);
@@ -93,11 +93,11 @@ class FileDatabase implements Database {
         }
     }
 
-    public void abortTransaction(String tid) {
+    public void abortTransaction(String tid) throws InterruptedException {
         abortTransaction(tid, false);
     }
 
-    private void abortTransaction(String tid, boolean inRecovery) {
+    private void abortTransaction(String tid, boolean inRecovery) throws InterruptedException {
         // you could release the reader locks here in normal processing.
         if (!inRecovery) {
             releaseReaderLocks(tid);
@@ -143,7 +143,7 @@ class FileDatabase implements Database {
         }
     }
 
-    private void undoRecovery(List<String> tids) {
+    private void undoRecovery(List<String> tids) throws InterruptedException {
         // anything that was not commited or aborted needs to have comp records and a abort record.
         for (String tid: tids) {
             System.out.println("Aborting tid " + tid);
@@ -155,9 +155,8 @@ class FileDatabase implements Database {
     // The records commited/aborted are serialized ahead of ones that arent.
     // the undo may add partial transactions that need abort processing.
     // The recovery should be idempotent.
-    public void recover() {
+    public void recover() throws InterruptedException {
         List<LogRecord> list = logImpl.readAllRecords();
-        dump();
         Map<String, Boolean> tidStatus = new HashMap<>();
 
         for (LogRecord r : list) {
@@ -185,6 +184,9 @@ class FileDatabase implements Database {
 
         redoRecovery(list, completedTransactions);
         undoRecovery(incompleteTransactions);
+
+        // read records after adding possible compensating transactions.
+        list = logImpl.readAllRecords();
         redoRecovery(list, incompleteTransactions);
     }
 

@@ -4,7 +4,7 @@ import java.util.concurrent.*;
 class TransactionClient {
     final static int maxBlock = 8;
     static Database db = createDatabase(Database.LogType.UNDO);
-    static ExecutorService executorService = new ForkJoinPool();
+    static ExecutorService executorService = new ThreadPoolExecutor(5, 5, 0, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
     static int threadInstanceNum;
 
     synchronized static int getThreadInstanceNum() {
@@ -26,7 +26,7 @@ class TransactionClient {
 
     static void shutdownTransactionThreads() throws InterruptedException {
         executorService.shutdownNow();
-        executorService.awaitTermination(1, TimeUnit.MINUTES);
+        executorService.awaitTermination(1, TimeUnit.SECONDS);
     }
 
     public static void main(String args[]) throws Throwable {
@@ -78,6 +78,7 @@ class TransactionClient {
             String tid2 = db.startTransaction();
             db.write(new Block(list[2]), new Data(threadString), tid2, true);
             db.abortTransaction(tid2);
+
         }
     }
 
@@ -88,7 +89,7 @@ class TransactionClient {
                 instanceNum = getThreadInstanceNum();
                 doTransactions(instanceNum);
             
-            } catch(InterruptedException e) {
+            } catch (InterruptedException e) {
                 System.out.println("Thread " + instanceNum + " done");
             }
         }

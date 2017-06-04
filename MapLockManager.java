@@ -13,19 +13,19 @@ class MapLockManager<T> implements LockManager<T> {
         return lock;
     }
 
-    public void acquireReaderLock(T t) {
+    public void acquireReaderLock(T t) throws InterruptedException {
         RWLock lock = getRWLock(t);
 
         lock.acquireReaderLock();
     }
 
-    public void acquireWriterLock(T t) {
+    public void acquireWriterLock(T t) throws InterruptedException {
         RWLock lock = getRWLock(t);
 
         lock.acquireWriterLock();
     }
 
-    public void releaseReaderLock(T t) {
+    public void releaseReaderLock(T t) throws InterruptedException {
         RWLock lock = getRWLock(t);
 
         lock.releaseReaderLock();
