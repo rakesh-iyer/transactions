@@ -35,6 +35,7 @@ class TransactionClient {
         createTransactionThreads(5);
         mainThread.start();
         mainThread.join();
+        db.stopCheckpoint();
         db.dump();
         System.out.println("\n\nRecovering database\n\n");
         db.recover();
@@ -78,7 +79,6 @@ class TransactionClient {
             String tid2 = db.startTransaction();
             db.write(new Block(list[2]), new Data(threadString), tid2, true);
             db.abortTransaction(tid2);
-
         }
     }
 
@@ -100,8 +100,9 @@ class TransactionClient {
             // wait a while.
             System.out.println("MainThread running");
             try {
-                Thread.sleep(50);
+                Thread.sleep(5000);
                 // destroy all threads.
+                System.out.println("Shutdown Threads");
                 shutdownTransactionThreads();
             } catch (Exception e) {
                 e.printStackTrace();

@@ -3,19 +3,26 @@ import java.util.concurrent.*;
 
 class FileDatabase implements Database {
     LogType logType;
-    LogImpl logImpl = new FileLogImpl(UUID.randomUUID().toString());
+    LogImpl logImpl = new FileLogImpl("TransactionLog");
     Datastore ds = new MapDatastore();
     LockManager<Block> blockLockMgr = new MapLockManager<>();
     ConcurrentMap<String, List<Block>> transactionReadLocksMap = new ConcurrentHashMap<>();
+    ConcurrentLinkedQueue<String> activeTids = new ConcurrentLinkedQueue<>();
+    Thread checkpointThread;
+    boolean stopCheckpoint;
 
     FileDatabase(LogType logType) {
         this.logType = logType;
+
+        checkpointThread = new Thread(new CheckpointThread());
+        checkpointThread.start();
     }
 
     // transaction support.
     public String startTransaction() {
         String tid = UUID.randomUUID().toString();
         transactionReadLocksMap.put(tid, new ArrayList<Block>());
+        activeTids.add(tid);
 
         return tid;
     }
@@ -91,6 +98,8 @@ class FileDatabase implements Database {
             }
             blockLockMgr.releaseWriterLock(r.getBlock());
         }
+
+        activeTids.remove(tid);
     }
 
     public void abortTransaction(String tid) throws InterruptedException {
@@ -126,6 +135,10 @@ class FileDatabase implements Database {
         StatusRecord s = new StatusRecord(tid);
         s.setCommited(false);
         logImpl.writeRecord(s);
+
+        if (!inRecovery) {
+            activeTids.remove(tid);
+        }
     }
 
     private void redoRecovery(List<LogRecord> list, List<String> tids) {
@@ -190,6 +203,51 @@ class FileDatabase implements Database {
         redoRecovery(list, incompleteTransactions);
     }
 
+    // checkpointing the log.
+
+    class CheckpointThread implements Runnable {
+        int checkpoint() {
+            int minimumLSN = Integer.MAX_VALUE;
+            // The minimum will always converge despite items being added or removed from list of active transactions.
+            for (String tid : activeTids) {
+                int lsn = logImpl.getFirstLSN(tid);
+
+                if (lsn < minimumLSN) {
+                    minimumLSN = lsn;
+                }
+            }
+
+            return minimumLSN < Integer.MAX_VALUE ? minimumLSN : 0;
+        }
+
+        public void run() {
+            try {
+                while (!stopCheckpoint) {
+                    int minimumLSN = checkpoint();
+                    System.out.println("Snipping log at LSN - " + minimumLSN);
+                    logImpl.snipLog(minimumLSN);
+
+                    Thread.sleep(100);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void finalize() {
+        stopCheckpoint();
+    }
+
+    public void stopCheckpoint() {
+        try {
+            stopCheckpoint = true;
+            checkpointThread.join();
+            System.out.println("Checkpointing stopped");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     // debugging
 

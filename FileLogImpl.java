@@ -1,4 +1,5 @@
 import java.io.*;
+import java.nio.file.*;
 import java.util.*;
 
 class FileLogImpl implements LogImpl {
@@ -9,6 +10,12 @@ class FileLogImpl implements LogImpl {
     public FileLogImpl(String fileName) {
         logFile = new File(fileName);
         deleteAllRecords();
+    }
+
+    public int getFirstLSN(String tid) {
+        List<LogRecord> list = readAllRecords(tid);
+
+        return list.size() > 0 ? list.get(0).getLSN() : Integer.MAX_VALUE;
     }
 
     synchronized public void deleteAllRecords() {
@@ -34,7 +41,7 @@ class FileLogImpl implements LogImpl {
         }
     }
 
-    synchronized public List<LogRecord> readRecordsFilter(String tid, boolean onlyUpdates) {
+    synchronized List<LogRecord> readRecordsFilter(String tid, int startLSN, boolean onlyUpdates) {
         try {
             ObjectInputStream ois = new ObjectInputStream(new FileInputStream(logFile));
             List<LogRecord> list = new ArrayList<LogRecord>();
@@ -44,6 +51,11 @@ class FileLogImpl implements LogImpl {
             while (!done) {
                 try {
                     LogRecord r = (LogRecord)ois.readObject();
+
+                    if (r.getLSN() < startLSN) {
+                        continue;
+                    }
+
                     if (tid != null && !r.getTransactionId().equals(tid)) {
                         continue;
                     }
@@ -74,16 +86,16 @@ class FileLogImpl implements LogImpl {
     }
 
     public List<LogRecord> readAllRecords() {
-        return readRecordsFilter(null, false);
+        return readRecordsFilter(null, 0, false);
     }
 
     public List<LogRecord> readAllRecords(String tid) {
-        return readRecordsFilter(tid, false);
+        return readRecordsFilter(tid, 0, false);
     }
 
     public List<UpdateRecord> readUpdateRecords() {
         List<UpdateRecord> list = new ArrayList<>();
-        for (LogRecord r : readRecordsFilter(null, true)) {
+        for (LogRecord r : readRecordsFilter(null, 0, true)) {
             list.add((UpdateRecord)r);
         }
 
@@ -93,12 +105,38 @@ class FileLogImpl implements LogImpl {
 
     public List<UpdateRecord> readUpdateRecords(String tid) {
         List<UpdateRecord> list = new ArrayList<>();
-        for (LogRecord r : readRecordsFilter(tid, true)) {
+        for (LogRecord r : readRecordsFilter(tid, 0, true)) {
             list.add((UpdateRecord)r);
         }
 
         // no way to get base function to return a wildcard type.
         return list;
+    }
+
+    synchronized public void snipLog(int lsn) {
+        try {
+            oos.close();
+
+            List<LogRecord> list = readRecordsFilter(null, lsn, false);
+            File fileBackup = new File(logFile.getName() + ".backup" + System.currentTimeMillis());
+
+            Files.move(logFile.toPath(), fileBackup.toPath(), StandardCopyOption.ATOMIC_MOVE);
+
+            oos = new ObjectOutputStream(new FileOutputStream(logFile));
+            for (LogRecord r : list) {
+                writeRecord(r);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void finalize() {
+        try {
+            oos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     String getString(LogRecord r) {

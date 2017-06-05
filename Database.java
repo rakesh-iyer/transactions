@@ -10,5 +10,6 @@ interface Database {
     void commitTransaction(String tid) throws InterruptedException;
     void abortTransaction(String tid) throws InterruptedException;;
     void recover() throws InterruptedException;;
+    void stopCheckpoint();
     void dump();
 }
