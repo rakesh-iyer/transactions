@@ -22,6 +22,10 @@ class LogRecord implements Serializable {
         return transactionId;
     }
 
+    void setTransactionId(String transactionId) {
+        this.transactionId = transactionId;
+    }
+
     public String toString() {
         return getLSN() + ":" + getTransactionId();
     }
